@@ -18,7 +18,7 @@ contract YourContract {
     }
 
     function getWinner() public view returns (uint[] memory) {
-        require(candidates.length > 0, "Кандидатов нет");
+        require(candidates.length > 0, "No candidates");
         uint[] memory cLength = new uint[](candidates.length);
         uint winnerVotes = candidates[0].votes;
         for (uint i = 1; i < candidates.length; i++) {
@@ -36,12 +36,12 @@ contract YourContract {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == proprietor, "Не владелец");
+        require(msg.sender == proprietor, "Not the proprietor");
         _;
     }
 
     function getCandidate(uint index) public view returns (Candidate memory) {
-        require(index < candidates.length, "Неверный индекс кандидата");
+        require(index < candidates.length, "Incorrect proprietor index");
         return candidates[index];
     }
 
@@ -55,8 +55,8 @@ contract YourContract {
     }
 
     function vote(uint index) public {
-        require(!hasVoted[msg.sender], "Вы уже проголосовали");
-        require(index < candidates.length, "Неверный индекс кандидата");
+        require(!hasVoted[msg.sender], "You've already voted");
+        require(index < candidates.length, "Incorrect proprietor index");
         candidates[index].votes += 1;
         hasVoted[msg.sender] = true;
     }
