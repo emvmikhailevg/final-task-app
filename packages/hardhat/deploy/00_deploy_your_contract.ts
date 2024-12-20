@@ -29,7 +29,7 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
     autoMine: true,
   });
 
-  const voterContract = await hre.ethers.getContract<Contract>("VoterContract", deployer);
+  const voterContract = await hre.ethers.getContract<Contract>("YourContract", deployer);
   console.log("YourContract deployed at:", voterContract.address);
   const candidateCount = await voterContract.getCandidatesCount();
   console.log("Number of candidates:", candidateCount);
