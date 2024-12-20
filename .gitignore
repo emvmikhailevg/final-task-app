@@ -4,6 +4,7 @@ node_modules
 # yarn
 .yarn/*
 !.yarn/patches
+!.yarn/cache
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
@@ -21,3 +22,4 @@ node_modules
 
 # cli
 dist
+/.yarn/cache/
