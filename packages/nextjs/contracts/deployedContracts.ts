@@ -7,13 +7,13 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     YourContract: {
-      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      address: "0x66459a0D25b617a29fB131B6D990002738A3304a",
       abi: [
         {
           inputs: [
             {
               internalType: "address",
-              name: "_owner",
+              name: "_proprietor",
               type: "address",
             },
           ],
@@ -55,44 +55,6 @@ const deployedContracts = {
             },
           ],
           stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "zabava",
-              type: "uint256",
-            },
-          ],
-          name: "empty",
-          outputs: [
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "name",
-                  type: "string",
-                },
-                {
-                  internalType: "uint256",
-                  name: "votes",
-                  type: "uint256",
-                },
-              ],
-              internalType: "struct YourContract.Candidate",
-              name: "",
-              type: "tuple",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "endVoting",
-          outputs: [],
-          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -169,14 +131,9 @@ const deployedContracts = {
           name: "getWinner",
           outputs: [
             {
-              internalType: "uint256",
-              name: "winnerIndex",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "winnerVotes",
-              type: "uint256",
+              internalType: "uint256[]",
+              name: "",
+              type: "uint256[]",
             },
           ],
           stateMutability: "view",
@@ -203,7 +160,7 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "owner",
+          name: "proprietor",
           outputs: [
             {
               internalType: "address",
@@ -225,19 +182,6 @@ const deployedContracts = {
           name: "vote",
           outputs: [],
           stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "votingActive",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
           type: "function",
         },
       ],

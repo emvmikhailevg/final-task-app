@@ -23,7 +23,6 @@ const Home: NextPage = () => {
   const [selectedCandidate, setSelectedCandidate] = useState<number | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [winner, setWinner] = useState<Winner | null>(null);
-  const [isOwner, setIsOwner] = useState(false);
 
   const { data: ownerData } = useScaffoldReadContract({
     contractName: "YourContract",
@@ -46,11 +45,20 @@ const Home: NextPage = () => {
   const { writeContractAsync: voteAsync, isMining: isVoting } = useScaffoldWriteContract("YourContract");
 
   useEffect(() => {
-    console.log(winnerData);
+    if (allCandidatesData) {
+      const fetchedCandidates: Candidate[] = (allCandidatesData as readonly { name: string; votes: bigint }[]).map(
+          candidate => ({
+            name: candidate.name,
+            votes: candidate.votes,
+          }),
+      );
+      setCandidates(fetchedCandidates);
+    }
+  }, [allCandidatesData]);
+
+  useEffect(() => {
     if (winnerData) {
-      console.log(winnerData);
       const [winnerIndex, winnerVotes] = winnerData as [bigint, bigint];
-      console.log(winnerIndex, winnerVotes);
       setWinner({
         winnerIndex,
         winnerVotes,
@@ -58,40 +66,7 @@ const Home: NextPage = () => {
     }
   }, [winnerData]);
 
-  useEffect(() => {
-    if (ownerData && connectedAddress) {
-      setIsOwner(ownerData.toLowerCase() === connectedAddress.toLowerCase());
-    } else {
-      setIsOwner(false);
-    }
-  }, [ownerData, connectedAddress]);
-
-  useEffect(() => {
-    if (allCandidatesData) {
-      const fetchedCandidates: Candidate[] = (allCandidatesData as readonly { name: string; votes: bigint }[]).map(
-        candidate => ({
-          name: candidate.name,
-          votes: candidate.votes,
-        }),
-      );
-      setCandidates(fetchedCandidates);
-    }
-  }, [allCandidatesData]);
-
-  const handleMakeVote = async () => {
-    if (selectedCandidate === null) return;
-    try {
-      await voteAsync({
-        functionName: "vote",
-        args: [BigInt(selectedCandidate)],
-      });
-      setSelectedCandidate(null);
-    } catch (e) {
-      console.error("Ошибка при голосовании:", e);
-    }
-  };
-
-  const handlePutCandidate = async () => {
+  const handleAddCandidate = async () => {
     if (!newCandidate) return;
     try {
       await addCandidateAsync({
@@ -104,82 +79,105 @@ const Home: NextPage = () => {
     }
   };
 
+  const handleVote = async () => {
+    if (selectedCandidate === null) return;
+    try {
+      await voteAsync({
+        functionName: "vote",
+        args: [BigInt(selectedCandidate)],
+      });
+      setSelectedCandidate(null);
+    } catch (e) {
+      console.error("Ошибка при голосовании:", e);
+    }
+  };
+
   return (
-    <>
-      <div className="flex items-center flex-col flex-grow pt-10">
-        <div className="px-5">
-          <h1 className="text-center font-semibold">
-            <span className="block text-3xl mb-4 text-blue-600">Приветствуем вас в нашем голосовании!</span>
-          </h1>
-          <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row">
-            <p className="my-2 font-medium">Ваш подключенный адрес:</p>
-            <Address address={connectedAddress} />
+      <>
+        <div className="flex flex-col items-center justify-start flex-grow p-8">
+          <div className="max-w-xl w-full mb-10">
+            <h1 className="text-center text-3xl font-semibold text-blue-700 mb-6">
+              Добро пожаловать
+            </h1>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <p className="font-medium text-gray-700">Подключенный адрес:</p>
+              <Address address={connectedAddress} />
+            </div>
+          </div>
+
+          <div className="w-full max-w-md border border-gray-300 rounded-md shadow-lg p-6 bg-white">
+            <h2 className="font-bold text-xl text-gray-900 mb-4 text-center">
+              Добавить кандидата
+            </h2>
+            <input
+                type="text"
+                value={newCandidate}
+                onChange={e => setNewCandidate(e.target.value)}
+                className="w-full mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 px-3 py-2 text-gray-800"
+                placeholder="Имя кандидата"
+            />
+            <button
+                className={`w-full py-2 rounded text-white font-medium transition-colors ${
+                    isAdding
+                        ? "bg-blue-300 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                }`}
+                onClick={handleAddCandidate}
+                disabled={isAdding}
+            >
+              {isAdding ? "Добавление..." : "Добавить"}
+            </button>
+          </div>
+
+          <div className="mt-12 w-full max-w-2xl">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4 text-center">
+              Список кандидатов
+            </h2>
+            {isCandidatesLoading ? (
+                <p className="text-center text-gray-600">Загрузка кандидатов...</p>
+            ) : candidates.length > 0 ? (
+                <ul className="space-y-2">
+                  {candidates.map((candidate, index) => (
+                      <li
+                          key={index}
+                          className="flex items-center justify-between border border-gray-200 rounded-md px-4 py-2 bg-white shadow-sm"
+                      >
+                  <span className="text-gray-800">
+                    {index}. {candidate.name} — {candidate.votes.toString()} голосов
+                  </span>
+                        <button
+                            className={`px-3 py-1 rounded font-medium text-white transition-colors ${
+                                isVoting && selectedCandidate === index
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-green-600 hover:bg-green-700"
+                            }`}
+                            onClick={() => setSelectedCandidate(index)}
+                            disabled={isVoting}
+                        >
+                          {isVoting && selectedCandidate === index
+                              ? "Голосование..."
+                              : "Голосовать"}
+                        </button>
+                      </li>
+                  ))}
+                </ul>
+            ) : (
+                <p className="text-center text-gray-600">Кандидатов пока нет.</p>
+            )}
+            {selectedCandidate !== null && (
+                <button
+                    className={`mt-4 w-full py-2 rounded text-white font-medium transition-colors ${
+                        isVoting ? "bg-yellow-300 cursor-not-allowed" : "bg-yellow-600 hover:bg-yellow-700"
+                    }`}
+                    onClick={handleVote}
+                    disabled={isVoting}
+                >
+                  {isVoting ? "Голосование..." : "Подтвердить выбор"}
+                </button>
+            )}
           </div>
         </div>
-
-        {isOwner && (
-            <div className="mt-8 w-full max-w-md">
-              <h2 className="font-bold leading-snug tracking-normal text-slate-800 mx-auto my-6 w-full text-2xl lg:max-w-3xl lg:text-4xl">
-                Добавить нового кандидата
-              </h2>
-              <input
-                  type="text"
-                  value={newCandidate}
-                  onChange={e => setNewCandidate(e.target.value)}
-                  className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-300 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm"
-                  placeholder="Введите имя кандидата"
-              />
-              <button className="btn btn-primary w-full mt-2" onClick={handlePutCandidate} disabled={isAdding}>
-                {isAdding ? "Добавление..." : "Добавить"}
-              </button>
-            </div>
-        )}
-
-        <div className="mt-16 w-full max-w-2xl">
-          <h2 className="text-2xl mb-4 font-semibold">Список кандидатов</h2>
-          {isCandidatesLoading ? (
-              <p>Загружаем список кандидатов...</p>
-          ) : candidates.length > 0 ? (
-              <ul className="list-disc list-inside">
-                {candidates.map((candidate, index) => (
-                    <li key={index} className="flex justify-between items-center my-2">
-              <span>
-                {index}. {candidate.name} — {candidate.votes.toString()} голосов
-              </span>
-                      <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => setSelectedCandidate(index)}
-                          disabled={isVoting}
-                      >
-                        {isVoting && selectedCandidate === index ? "Голосуем..." : "Голосовать"}
-                      </button>
-                    </li>
-                ))}
-              </ul>
-          ) : (
-              <p>Сейчас в списке нет ни одного кандидата.</p>
-          )}
-          {selectedCandidate !== null && (
-              <button className="btn btn-primary mt-4" onClick={handleMakeVote} disabled={isVoting}>
-                {isVoting ? "Голосуем..." : "Подтвердить ваш выбор"}
-              </button>
-          )}
-        </div>
-
-        <div className="mt-16 w-full max-w-md">
-          <h2 className="text-2xl mb-4 font-semibold">Лидер голосования</h2>
-          {isWinnerLoading ? (
-              <p>Определяем лидера...</p>
-          ) : winner ? (
-              <p>
-                Кандидат с индексом {winner.winnerIndex.toString()} набрал {winner.winnerVotes.toString()} голосов
-              </p>
-          ) : (
-              <p>Лидер пока не определен.</p>
-          )}
-        </div>
-      </div>
-    </>
+      </>
   );
 };
 
